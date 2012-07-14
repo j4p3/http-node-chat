@@ -63,9 +63,9 @@ function inputListener() {
 
   //  look for submission
   $('form#messagebox').submit(function() {
-    var inputText = $('input#inputText').val();
-    $('input#inputText').val('');
-    event.preventDefault();
+    var inputText = $('input#inputText').val(); //  get input value
+    $('input#inputText').val(''); //  clear input field
+    event.preventDefault(); //  stop page refresh
 
     console.log('inputText:');
     console.log(inputText);
