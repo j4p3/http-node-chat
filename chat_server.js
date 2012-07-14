@@ -1,30 +1,16 @@
-/*
-I am tired. the current problem: updateChat is calling at regular intervals, instead of
-every 30 seconds, because it keeps triggering itself. For some reason the listen() function
-is being activated by all paths, not just the specified one.
-
-Also, if no data is being passed from update to add, add will return undefined even after
-this is fixed.
-
-Solution: maintain an array of connections. Forget /update. When /add is called, return
-to all connections.
-*/
+var http = require('http'), url = require('url'), path = require('path');
 
 
-var http = require('http'), url = require('url'), path = require('path'), sys = require('sys');
-connections = [];
+function getPath(req) {
+	//	get request path
+    var reqType = url.parse(req.url).pathname;	//	/add OR /update
+	console.log('Request with');
+	console.log('req data: '+req);
+	console.log('req path: '+reqType);
 
-//	
-function update() {
-	console.log('update called');
-    if (connections.length) {
-        connections.forEach(function(c) {
-            sys.puts(JSON.stringify(c));
-            c.sendBody('oi\n');
-        });
-    }
-    setTimeout(update, 1000);
-}
+	return reqType;
+};
+
 
 //	start server with parameters request and response
 var serv = http.createServer(function(req,res) {
@@ -35,32 +21,26 @@ var serv = http.createServer(function(req,res) {
 	});
 	console.log('');
 
-/*
-	//	get request path
-    var reqType = path.normalize(decodeURI(url.parse(req.url).pathname));	//	/add OR /update
-	console.log('createServer called with');
-	console.log('req data: '+req);
-	console.log('req path: '+reqType);
+	reqType = getPath(req);
 
 	switch (reqType) {
 		case "/add":
-			addMsg();
+			addMsg(req);
 			break;
 		case "/update":
 			updateMsg();
 			break;
 		default:
 			console.log('invalid query path');
-		//	404
+			//	404
 	}
-*/
 
 
-	function addMsg() {
+	function addMsg(newReq) {
 		console.log('addMsg called');
 
 		//	parse request data into usable format
-		var entry = require('url').parse(req.url, true, true);	// this is necessary for some reason
+		var entry = require('url').parse(newReq.url, true, true);	// this is necessary for some reason
 		var userVal = entry.query.user;
 		var bodyVal = entry.query.body;
 
@@ -78,9 +58,20 @@ var serv = http.createServer(function(req,res) {
 
 	function updateMsg() {
 		console.log('updateMsg called');
-		serv.listen('/add', function(newData) {	//	waits for any /add requests
-			console.log('updateMsg detects /add path');
-			addMsg(newData);	//	deliver new /add requests to (hopefully) all clients
+		serv.listen('/update', function(newData) {	//	waits for any /add requests
+		/*
+			This is the problem area. /update requests are intended to hang around,
+			not returning anything until the next /add request comes in.
+			server.listen(path, callback) seems to fit this role, but the callback
+			function is getting passed undefined data, which raises an error when
+			getPath tries to read its url. More information is need on server.listen,
+			or an alternative way to keep /update requests around.
+		*/
+			reqType = getPath(newData);	//	check if new request is /update or /add
+			if (reqType == '/add') {
+				console.log('updateMsg detects /add path');
+				addMsg(newData);	//	deliver new /add request to (hopefully) all clients
+			}
 		});
 	};
 });

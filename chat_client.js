@@ -1,4 +1,5 @@
 var userName = "myUsername";
+var server = "http://localhost:1995"
 var chatLog = [];
 
 function msgAppender(msg) {
@@ -22,7 +23,7 @@ function sendMsg(msg) {
 	console.log('sendMsg called');
 
 	$.ajax({
-		url: "http://localhost:1995/add",
+		url: server+"/add",
 		dataType: "json",
 		data: msg,
 		success: function(data) {
@@ -32,18 +33,22 @@ function sendMsg(msg) {
 
 };
 
+
 function updateChat() {
 	console.log('updateChat called');
 
-	function poll() {
-		setTimeout(function() {
-	       $.ajax({ url: "http://localhost:1995/update", success: function(data) {
-	            msgAppender(data);
-	       }, dataType: "json", complete: poll() });
-	    }, 3000);
-	};
-
-	poll();
+	(function poll() {
+			setTimeout(function() {
+				$.ajax({
+					url: server+"/update",
+					dataType: "json",
+					success: function(data) {
+						msgAppender(data);
+					},
+					dataType: "json",
+					complete: poll() });
+			}, 30000);
+	})();
 
 };
 
