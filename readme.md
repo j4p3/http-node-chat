@@ -5,12 +5,13 @@ This project is cluttered. Only two files matter. Their intended flow is describ
 
 clientside (chat_client.js)
 ------------------------
+path 1 (add)
 1. doc.ready - listen for client input (msgListener)
 2. msgListener - format user input for JSON
 3. sendMsg - make AJAX request to server at address '/add'
 4. msgAppender - push server response to array, append to div
 
-
+path 2 (update)
 1. listen for other client input (updateChat)
 2. updateChat - use AJAX long-polling / comet to keep a persistent request for updates in the server at address 'update'. When an update happens, pass it.
 3. msgAppender - push server response to array, append to div
